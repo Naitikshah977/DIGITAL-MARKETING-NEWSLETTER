@@ -37,3 +37,16 @@ app.post('/api/subscribe', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+---
+
+### 🚀 Now Push to GitHub
+1. Open terminal:
+```bash
+cd path/to/newsletter-backend
+git init
+git remote add origin https://github.com/yourusername/newsletter-backend.git
+git add .
+git commit -m "Initial commit"
+git push -u origin master
+
