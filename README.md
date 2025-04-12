@@ -1,52 +1,77 @@
-# DIGITAL-MARKETING-NEWSLETTER
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const mailchimp = require('@mailchimp/mailchimp_marketing');
-require('dotenv').config();
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Mail } from 'lucide-react';
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+export default function NewsletterSignup() {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-app.use(cors());
-app.use(bodyParser.json());
+  const handleSubscribe = async () => {
+    if (!email) return;
+    setLoading(true);
+    setError('');
 
-mailchimp.setConfig({
-  apiKey: process.env.MAILCHIMP_API_KEY,
-  server: process.env.MAILCHIMP_SERVER_PREFIX, // e.g., 'us21'
-});
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-app.post('/api/subscribe', async (req, res) => {
-  const { email } = req.body;
+      if (!response.ok) {
+        throw new Error('Failed to subscribe');
+      }
 
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
-  }
+      setSubscribed(true);
+    } catch (err) {
+      setError('Subscription failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  try {
-    const response = await mailchimp.lists.addListMember(process.env.MAILCHIMP_AUDIENCE_ID, {
-      email_address: email,
-      status: 'subscribed',
-    });
-    return res.status(200).json({ message: 'Subscribed successfully', data: response });
-  } catch (error) {
-    return res.status(500).json({ error: error.response?.body?.detail || 'Something went wrong' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
----
-
-### 🚀 Now Push to GitHub
-1. Open terminal:
-```bash
-cd path/to/newsletter-backend
-git init
-git remote add origin https://github.com/yourusername/newsletter-backend.git
-git add .
-git commit -m "Initial commit"
-git push -u origin master
-
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 p-4">
+      <Card className="max-w-md w-full p-6 rounded-2xl shadow-2xl bg-white">
+        <CardContent>
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Join Our Digital Marketing Newsletter</h1>
+            <p className="text-sm text-gray-600 mt-2">
+              Get the latest updates, tips, and trends delivered straight to your inbox.
+            </p>
+          </div>
+          {!subscribed ? (
+            <div className="flex flex-col gap-4">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-xl"
+              />
+              <Button
+                onClick={handleSubscribe}
+                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={loading}
+              >
+                <Mail className="mr-2 h-4 w-4" /> {loading ? 'Subscribing...' : 'Subscribe'}
+              </Button>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+            </div>
+          ) : (
+            <div className="text-green-600 flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Thanks for subscribing!</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
